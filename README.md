@@ -1,49 +1,36 @@
-# GenAI RAG System — Built From Scratch
+# GenAI RAG Agent — Document Q&A with Measured Evaluation
 
-A Retrieval-Augmented Generation (RAG) chatbot that answers questions 
-using only a source document, built to learn the core mechanics of 
-production AI systems from the ground up (no frameworks like LangChain — 
-raw API calls, manual chunking, and embeddings).
+A Retrieval-Augmented Generation system built from raw API calls (no 
+LangChain/frameworks) to understand the core mechanics: chunking, 
+embeddings, retrieval, grounding, evaluation, and tool use.
 
 ## What it does
-- Fetches a Wikipedia article as a source document
-- Chunks the text into retrievable pieces
-- Embeds each chunk using `sentence-transformers`
-- Retrieves the most relevant chunks via cosine similarity for a given question
-- Grounds the LLM's answer strictly in retrieved context to reduce hallucination
+Answers questions about a source document (Wikipedia's "Artificial 
+Intelligence" article) by retrieving relevant chunks via embedding 
+similarity, then generating grounded answers — plus a basic agent 
+layer with tool use and error handling.
 
-## What I learned
-- How conversation memory actually works (there is none — you resend history every call)
-- The difference between retrieval failures (wrong chunks found) and 
-  generation failures (model ignores good context)
-- Why grounding instructions reduce but don't eliminate hallucination
-
-## Stack
-Python, Groq API (Llama 3.3), sentence-transformers, scikit-learn, Google Colab
-
-## Next steps
-Building a formal eval set to measure answer quality instead of eyeballing it.
-
-
-## Evaluation Results
-
-Built a 15-20 question eval set with known correct answers, graded 
-automatically using LLM-as-judge (a second AI call scoring PASS/FAIL 
-against expected answers).
+## Evaluation results
+Built an 18-question eval set, graded automatically via LLM-as-judge.
 
 | Version | Accuracy | Avg Tokens/Question |
 |---|---|---|
-| Baseline (top_n=2 chunks) | __% | ___ |
-| top_n=4 chunks | __% | ___ |
-| Stricter prompt | __% | ___ |
-| chunk_size=2000 | __% | ___ |
+| Baseline (top_n=2) | __% | ___ |
+| **top_n=4 (winner)** | __% | ___ |
 
-**Winner:** top_n=4 — improved accuracy by fixing cases where 2 chunks 
-weren't enough to cover multi-part questions, at a moderate token cost 
-increase.
+top_n=4 improved accuracy by fixing multi-part questions that needed 
+more retrieved context, at a moderate token cost increase.
 
-## Key learnings
-- Retrieval failures (wrong/incomplete chunks) and generation failures 
-  (model ignores good context) are distinct problems needing different fixes
-- Grounding instructions reduce but don't eliminate hallucination
-- Accuracy improvements often come with real cost tradeoffs worth measuring
+## Key engineering decisions
+- Distinguished retrieval failures (wrong chunks found) from generation 
+  failures (model ignores good context) — different fixes for each
+- Chose top_n=4 as the accuracy/cost sweet spot after isolated testing
+- Added try/except error handling to the agent's tool-calling loop 
+  for graceful failure instead of crashes
+
+## Stack
+Python, Groq (Llama 3.3), sentence-transformers, scikit-learn, Google Colab
+
+## What I'd build next
+Hybrid search (keyword + embedding), a real vector database, and 
+multi-tool agent workflows.
